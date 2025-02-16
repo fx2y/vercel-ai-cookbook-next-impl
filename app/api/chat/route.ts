@@ -67,7 +67,11 @@ export async function POST(req: Request) {
               city: z.string().describe('The city to get weather for')
             })
             // No execute function - requires human confirmation
-          })
+          }),
+          getLocation: {
+            description: 'Get user location',
+            parameters: z.object({})
+          }
         }
       });
 

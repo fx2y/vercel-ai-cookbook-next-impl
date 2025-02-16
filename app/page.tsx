@@ -1,9 +1,19 @@
 'use client';
 
-import { Message, useChat } from '@ai-sdk/react';
+import { useChat } from '@ai-sdk/react';
+import { Message } from 'ai';
 
 export default function Chat() {
-  const { messages, input, handleInputChange, handleSubmit, addToolResult } = useChat();
+  const { messages, input, handleInputChange, handleSubmit, addToolResult } = useChat({
+    api: '/api/chat',
+    onToolCall: async ({ toolCall }) => {
+      if (toolCall.toolName === 'getLocation') {
+        // For demo purposes, return a static location
+        // In a real app, you could use the browser's geolocation API
+        return 'San Francisco';
+      }
+    }
+  });
 
   return (
     <div className="flex flex-col w-full max-w-md py-24 mx-auto stretch">
@@ -62,6 +72,23 @@ export default function Chat() {
                   }
                 }
               }
+
+              if (toolInvocation.toolName === 'getLocation') {
+                if (toolInvocation.state === 'result') {
+                  return (
+                    <div key={i} className="ml-4 mt-2 text-sm bg-gray-100 p-2 rounded">
+                      📍 Location: {toolInvocation.result}
+                    </div>
+                  );
+                } else {
+                  return (
+                    <div key={i} className="ml-4 mt-2 text-sm bg-gray-100 p-2 rounded">
+                      Getting location...
+                    </div>
+                  );
+                }
+              }
+
               return null;
             })}
           </div>
