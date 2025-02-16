@@ -1,71 +1,66 @@
 'use client';
 
-import { useState } from 'react';
-
-// Define interface for API response
-interface CompletionResponse {
-  text: string;
-}
+import { useChat } from '@ai-sdk/react';
+import { useEffect, useRef } from 'react';
 
 export default function Page() {
-  const [generation, setGeneration] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { messages, input, setInput, append, isLoading, error } = useChat({
+    api: '/api/chat',
+  });
+  
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const generateText = async () => {
-    setIsLoading(true);
-    setError(null);
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
 
-    try {
-      const response = await fetch('/api/completion', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          prompt: 'Why is the sky blue?',
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to generate text: ${response.statusText}`);
-      }
-
-      const data: CompletionResponse = await response.json();
-      setGeneration(data.text);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-      console.error('Error generating text:', error);
-      setError(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  if (error) {
+    return (
+      <div className="text-red-500 p-4">
+        Error: {error.message}
+      </div>
+    );
+  }
 
   return (
-    <div className="container mx-auto max-w-2xl p-4">
-      <button
-        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-blue-300 transition-colors"
-        onClick={generateText}
-        disabled={isLoading}
-      >
-        {isLoading ? 'Generating...' : 'Generate'}
-      </button>
-
-      <div className="mt-4">
+    <div className="flex flex-col w-full max-w-md mx-auto p-4">
+      <div className="flex flex-col space-y-4 mb-4">
+        {messages.map(message => (
+          <div 
+            key={message.id} 
+            className={`p-2 rounded ${
+              message.role === 'assistant' ? 'bg-gray-100' : ''
+            }`}
+          >
+            <strong>{message.role}: </strong>
+            {message.content}
+          </div>
+        ))}
         {isLoading && (
-          <div className="flex items-center text-gray-500">
-            <div className="animate-spin h-5 w-5 mr-3 border-2 border-blue-500 rounded-full border-t-transparent"></div>
-            Generating response...
+          <div className="text-gray-500 p-2">
+            Assistant is typing...
           </div>
         )}
-        {error && (
-          <p className="text-red-500">{error}</p>
-        )}
-        {!isLoading && !error && generation && (
-          <p className="whitespace-pre-wrap prose">{generation}</p>
-        )}
       </div>
+
+      <input
+        ref={inputRef}
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            append({
+              content: input,
+              role: 'user',
+            });
+            setInput('');
+          }
+        }}
+        placeholder="Type a message..."
+        className="w-full p-2 border rounded"
+        autoFocus
+      />
     </div>
   );
 }
