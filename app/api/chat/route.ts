@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     });
 
     const result = streamText({
-      model: openai('gpt-4-turbo'),
+      model: openai('gpt-4o-mini'),
       messages: filteredMessages,
       tools: {
         generateImage: tool({
