@@ -2,6 +2,7 @@
 
 import { useChat } from '@ai-sdk/react';
 import { Message } from 'ai';
+import { ToolResults } from './lib/constants';
 
 export default function Chat() {
   const { messages, input, handleInputChange, handleSubmit, addToolResult } = useChat({
@@ -29,26 +30,28 @@ export default function Chat() {
               if (toolInvocation.toolName === 'getWeatherInformation') {
                 if (toolInvocation.state === 'call') {
                   return (
-                    <div key={i} className="mt-2 p-4 border rounded-lg">
-                      <p className="mb-2">Get weather information for {toolInvocation.args.city}?</p>
-                      <div className="flex gap-2">
+                    <div key={i} className="mt-4 p-6 border-2 border-blue-200 rounded-lg bg-blue-50 shadow-lg">
+                      <p className="mb-4 text-lg font-semibold text-blue-900">
+                        🌤️ Get weather information for {toolInvocation.args.city}?
+                      </p>
+                      <div className="flex gap-3">
                         <button
                           onClick={() => addToolResult({
                             toolCallId: toolInvocation.toolCallId,
-                            result: 'Yes, confirmed.'
+                            result: ToolResults.CONFIRMED
                           })}
-                          className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600"
+                          className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200 shadow-md"
                         >
-                          Yes
+                          ✓ Yes
                         </button>
                         <button
                           onClick={() => addToolResult({
                             toolCallId: toolInvocation.toolCallId,
-                            result: 'No, denied.'
+                            result: ToolResults.DENIED
                           })}
-                          className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                          className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors duration-200 shadow-md"
                         >
-                          No
+                          ✗ No
                         </button>
                       </div>
                     </div>

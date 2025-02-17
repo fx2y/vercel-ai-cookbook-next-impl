@@ -7,16 +7,19 @@ import {
   tool
 } from 'ai';
 import { z } from 'zod';
+import { ToolResults } from '@/app/lib/constants';
+import { WeatherService } from '@/app/lib/weather';
 
-// Static weather data function
+// Initialize weather service
+const weatherService = new WeatherService(process.env.OPENWEATHER_API_KEY);
+
+// Weather tool execution function
 async function executeWeatherTool({ city }: { city: string }) {
-  const weatherOptions = ['sunny', 'cloudy', 'rainy', 'snowy'];
-  const temperature = Math.floor(Math.random() * 30) + 10; // 10-40°C
-  return {
-    condition: weatherOptions[Math.floor(Math.random() * weatherOptions.length)],
-    temperature: temperature,
-    city
-  };
+  try {
+    return await weatherService.getWeather(city);
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : 'Failed to fetch weather data' };
+  }
 }
 
 export async function POST(req: Request) {
@@ -36,13 +39,13 @@ export async function POST(req: Request) {
               return part;
             }
 
-            if (toolInvocation.result === 'Yes, confirmed.') {
+            if (toolInvocation.result === ToolResults.CONFIRMED) {
               const result = await executeWeatherTool(toolInvocation.args);
               dataStream.write(formatDataStreamPart('tool_result', {
                 toolCallId: toolInvocation.toolCallId,
                 result
               }));
-            } else if (toolInvocation.result === 'No, denied.') {
+            } else if (toolInvocation.result === ToolResults.DENIED) {
               dataStream.write(formatDataStreamPart('tool_result', {
                 toolCallId: toolInvocation.toolCallId,
                 result: { error: 'Weather information request was denied.' }
@@ -62,11 +65,10 @@ export async function POST(req: Request) {
         messages,
         tools: {
           getWeatherInformation: tool({
-            description: 'Get the weather for a location',
+            description: 'Get real-time weather for a location',
             parameters: z.object({
               city: z.string().describe('The city to get weather for')
             })
-            // No execute function - requires human confirmation
           }),
           getLocation: {
             description: 'Get user location',
