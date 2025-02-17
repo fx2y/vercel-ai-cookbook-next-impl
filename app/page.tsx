@@ -1,23 +1,23 @@
 'use client';
 
-import { useChat } from '@ai-sdk/react';
 import { Message } from 'ai';
+import { useMessages } from './lib/useMessages';
 import { ToolResults } from './lib/constants';
 
 export default function Chat() {
-  const { messages, input, handleInputChange, handleSubmit, addToolResult } = useChat({
-    api: '/api/chat',
-    onToolCall: async ({ toolCall }) => {
-      if (toolCall.toolName === 'getLocation') {
-        // For demo purposes, return a static location
-        // In a real app, you could use the browser's geolocation API
-        return 'San Francisco';
-      }
-    }
-  });
+  const { messages, input, handleInputChange, handleSubmit, addToolResult, clearMessages } = useMessages();
 
   return (
     <div className="flex flex-col w-full max-w-md py-24 mx-auto stretch">
+      <div className="fixed top-0 w-full max-w-md p-2 bg-white border-b">
+        <button
+          onClick={clearMessages}
+          className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-colors duration-200"
+        >
+          Clear History
+        </button>
+      </div>
+
       <div className="space-y-4">
         {messages.map((m: Message) => (
           <div key={m.id} className="whitespace-pre-wrap">
